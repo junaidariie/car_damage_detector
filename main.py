@@ -6,6 +6,11 @@ API_URL = "https://damage-detection-ojmo.onrender.com/predict"
 
 st.title("🛠️ Damage Detection App")
 st.write("Upload an image to detect damage using the deployed API.")
+st.markdown(
+    '<p class="subtitle" style="color:blue; font-weight:bold;">The app could take up to <b>1 minute</b> when using for the first time due to API latency.</p>',
+    unsafe_allow_html=True
+)
+
 
 # File uploader
 uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
