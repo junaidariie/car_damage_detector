@@ -25,20 +25,26 @@ def get_inference_transform():
 
 # 3. MODEL CLASS
 
-class CarClassifierResnet(nn.Module):
+class CarClassifierMobileNetV2(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
-        self.model = models.resnet50(weights="DEFAULT")
+        self.model = models.mobilenet_v2(weights="DEFAULT")
 
         for param in self.model.parameters():
             param.requires_grad = False
-
-        for param in self.model.layer4.parameters():
+        for param in self.model.features[-1].parameters():
             param.requires_grad = True
 
-        self.model.fc = nn.Sequential(
-            nn.Dropout(0.4),
-            nn.Linear(self.model.fc.in_features, num_classes)
+
+        in_features = self.model.classifier[1].in_features
+        self.model.classifier = nn.Sequential(
+            nn.Dropout(0.3),
+            nn.Linear(in_features, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+
+            nn.Dropout(0.3),
+            nn.Linear(512, num_classes)
         )
 
     def forward(self, x):
@@ -46,11 +52,12 @@ class CarClassifierResnet(nn.Module):
 
 
 
+
 # 4. LOAD MODEL ONLY ONCE
 
 def load_model():
-    model = CarClassifierResnet(NUM_CLASSES)
-    model.load_state_dict(torch.load("Model_Resnet.pth", map_location="cpu"))
+    model = CarClassifierMobileNetV2(NUM_CLASSES)
+    model.load_state_dict(torch.load("CarClassifierMobileNetV2", map_location="cpu"))
     model.eval()
     return model
 
@@ -68,4 +75,3 @@ def predict_image(pil_img):
         outputs = MODEL(img_tensor)
         _, predicted_idx = torch.max(outputs, dim=1)
         return CLASSES[predicted_idx.item()]
-
